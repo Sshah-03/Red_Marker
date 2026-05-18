@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Marker - Advanced Image Annotation with AI</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔴 Red Marker Pro</h1>
+            <p class="subtitle">Advanced Image Annotation Tool with AI Generation & Vision Analysis</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="upload">Upload & Annotate</button>
+            <button class="tab-btn" data-tab="generate">AI Generation</button>
+            <button class="tab-btn" data-tab="history">History & Navigation</button>
+            <button class="tab-btn" data-tab="analysis">Vision Analysis</button>
+            <button class="tab-btn" data-tab="models">Model Config</button>
+        </nav>
+
+        <main>
+            <!-- ===== UPLOAD & ANNOTATION SECTION ===== -->
+            <section id="upload-tab" class="tab-content active">
+                <!-- Upload Section -->
+                <div id="upload-section" class="section active">
+                    <div class="upload-area" id="upload-area">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <h2>Upload Image</h2>
+                        <p>Click to select or drag and drop an image</p>
+                        <p class="file-info">Supported: JPG, PNG, GIF, WebP (max 50MB)</p>
+                        <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.gif,.webp" hidden>
+                    </div>
+                    <div id="upload-error" class="error-message"></div>
+                </div>
+
+                <!-- Image Annotation Section -->
+                <section id="annotation-section" class="section hidden">
+                    <div class="annotation-container">
+                        <div class="image-wrapper">
+                            <img id="display-image" src="" alt="Uploaded image">
+                            <canvas id="canvas-overlay" class="canvas-overlay"></canvas>
+                        </div>
+                        
+                        <div class="info-panel">
+                            <h3>Markers</h3>
+                            <div id="marker-count" class="marker-count">Count: 0</div>
+                            <div id="marker-list" class="marker-list"></div>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button id="undo-btn" class="btn btn-secondary">↶ Undo</button>
+                        <button id="clear-btn" class="btn btn-secondary">🗑️ Clear All</button>
+                        <button id="download-btn" class="btn btn-primary">⬇ Download</button>
+                        <button id="new-upload-btn" class="btn btn-secondary">📤 New Image</button>
+                        <button id="reset-btn" class="btn btn-warning">↻ Reset</button>
+                    </div>
+
+                    <div class="panel marker-detail-panel">
+                        <h3>Generate Marker Detail</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Marker</label>
+                                <select id="marker-detail-select"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Output</label>
+                                <button id="generate-marker-detail-btn" class="btn btn-primary" type="button">Generate Detail Image</button>
+                            </div>
+                        </div>
+                        <div id="marker-detail-result" class="marker-detail-result">
+                            <p class="placeholder">Generated marker detail images use the selected marker and vision-model context.</p>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- ===== AI GENERATION SECTION ===== -->
+            <section id="generate-tab" class="tab-content">
+                <div class="section">
+                    <h2>AI Image Generation</h2>
+                    
+                    <!-- Generation Controls -->
+                    <div class="panel">
+                        <h3>Generation Settings</h3>
+                        <div class="form-group">
+                            <label>Prompts (one per line)</label>
+                            <textarea id="generation-prompts" placeholder="Enter prompts, one per line&#10;Example: A cat&#10;A dog&#10;A bird" rows="5"></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Interval (seconds)</label>
+                                <input type="number" id="generation-interval" value="5" min="1" max="60">
+                            </div>
+                            <div class="form-group">
+                                <label>Max Images (0 = infinite)</label>
+                                <input type="number" id="generation-max-images" value="0" min="0">
+                            </div>
+                        </div>
+                        
+                        <div class="controls">
+                            <button id="start-generation-btn" class="btn btn-primary">▶ Start Generation</button>
+                            <button id="stop-generation-btn" class="btn btn-danger hidden">⏹ Stop Generation</button>
+                        </div>
+                    </div>
+
+                    <!-- Generated Images Display -->
+                    <div class="panel">
+                        <h3>Generated Images</h3>
+                        <div class="pagination">
+                            <button id="gen-prev-btn" class="btn btn-sm">← Prev</button>
+                            <span id="gen-page-info">Page 1</span>
+                            <button id="gen-next-btn" class="btn btn-sm">Next →</button>
+                        </div>
+                        
+                        <div id="generated-images-container" class="images-grid">
+                            <p class="placeholder">No images generated yet</p>
+                        </div>
+                    </div>
+
+                    <!-- Deterministic Drill -->
+                    <div class="panel">
+                        <h3>Deterministic Drill</h3>
+                        <div class="form-group">
+                            <label>Drill Name</label>
+                            <input type="text" id="drill-name" placeholder="e.g., Test Drill 1">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Seed</label>
+                                <input type="number" id="drill-seed" value="42" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Images</label>
+                                <input type="number" id="drill-num-images" value="10" min="1" max="100">
+                            </div>
+                        </div>
+                        
+                        <div class="controls">
+                            <button id="create-drill-btn" class="btn btn-primary">📋 Create Drill</button>
+                        </div>
+                    </div>
+
+                    <!-- Saved Drills -->
+                    <div class="panel">
+                        <h3>Saved Drills</h3>
+                        <div id="saved-drills-list" class="drills-list">
+                            <p class="placeholder">No drills created yet</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== HISTORY & NAVIGATION SECTION ===== -->
+            <section id="history-tab" class="tab-content">
+                <div class="section">
+                    <h2>History & Navigation</h2>
+                    
+                    <div class="panel">
+                        <h3>Session Navigation</h3>
+                        <div id="session-info" class="info-box">
+                            <p>No active session</p>
+                        </div>
+                        
+                        <div class="controls">
+                            <button id="history-prev-btn" class="btn btn-secondary">← Previous</button>
+                            <input type="number" id="image-index" placeholder="Image index" min="0">
+                            <button id="go-to-btn" class="btn btn-secondary">Go To</button>
+                            <button id="history-next-btn" class="btn btn-secondary">Next →</button>
+                            <button id="history-reset-btn" class="btn btn-warning">↻ Reset to Start</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Navigation History</h3>
+                        <div id="history-list" class="history-list">
+                            <p class="placeholder">No navigation history yet</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== VISION ANALYSIS SECTION ===== -->
+            <section id="analysis-tab" class="tab-content">
+                <div class="section">
+                    <h2>Vision Analysis</h2>
+                    
+                    <div class="panel">
+                        <h3>Image Analysis</h3>
+                        <div class="form-group">
+                            <label>Image ID to Analyze</label>
+                            <input type="number" id="analyze-image-id" placeholder="Enter image ID" min="0">
+                        </div>
+                        
+                        <div class="controls">
+                            <button id="analyze-btn" class="btn btn-primary">🔍 Analyze Image</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Analysis Results</h3>
+                        <div id="analysis-results" class="analysis-box">
+                            <p class="placeholder">No analysis results yet</p>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Session Analyses</h3>
+                        <div id="session-analyses" class="analyses-list">
+                            <p class="placeholder">No analyses for current session</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== MODEL CONFIGURATION SECTION ===== -->
+            <section id="models-tab" class="tab-content">
+                <div class="section">
+                    <h2>Model Configuration</h2>
+                    
+                    <div class="panel">
+                        <h3>Current Configuration</h3>
+                        <div id="models-config" class="config-box">
+                            <p>Loading configuration...</p>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Image Generation Model</h3>
+                        <div class="form-group">
+                            <label>Model Name</label>
+                            <select id="image-gen-model">
+                                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                <option value="gemini-1.0-pro-vision">Gemini 1.0 Pro Vision</option>
+                                <option value="custom">Custom Model</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>API Key (optional)</label>
+                            <input type="password" id="image-gen-api-key" placeholder="Leave blank to use environment variable">
+                        </div>
+                        
+                        <div class="controls">
+                            <button id="set-image-gen-model-btn" class="btn btn-primary">✓ Update</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Vision Model</h3>
+                        <div class="form-group">
+                            <label>Model Name</label>
+                            <select id="vision-model">
+                                <option value="resnet50">ResNet50 (Classification)</option>
+                                <option value="clip">CLIP (Vision-Language)</option>
+                                <option value="yolo">YOLOv8 (Object Detection)</option>
+                                <option value="custom">Custom Model</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Model Path (for custom models)</label>
+                            <input type="text" id="vision-model-path" placeholder="/path/to/model">
+                        </div>
+                        
+                        <div class="controls">
+                            <button id="set-vision-model-btn" class="btn btn-primary">✓ Update</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Processing Indicator -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p id="loading-text">Processing...</p>
+            </div>
+
+            <!-- Error Toast -->
+            <div id="error-toast" class="toast hidden">
+                <span id="error-message"></span>
+                <button class="toast-close">×</button>
+            </div>
+
+            <!-- Success Toast -->
+            <div id="success-toast" class="toast success hidden">
+                <span id="success-message"></span>
+                <button class="toast-close">×</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Red Marker Pro. Advanced Image Annotation with AI Generation & Vision Analysis.</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/script.js?v=marker-coords-2"></script>
+    <script src="/static/js/generation.js?v=marker-coords-2"></script>
+    <script src="/static/js/analysis.js?v=marker-coords-2"></script>
+    <script src="/static/js/models.js?v=marker-coords-2"></script>
+    <script src="/static/js/history.js?v=marker-coords-2"></script>
+</body>
+</html>
